@@ -1,7 +1,25 @@
 function cyl_p = sal_peg(cyl_p,map)
-
-% assumed firing order 1-3-4-2 with data collection triggered on bdc
-% compression of cylinder 1.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                         %
+%   sal_peg - peg cylinder pressure data using intake manifold pressure   %
+%                                                                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% sal_peg - version 0.9 - Jacob E. McKenzie - modified: 01/04/14
+%
+% inputs:
+%  - cyl_p	[pressure] : cylinder pressure, nsamp by ncycle matrix
+%  - map	[pressure] : manifold pressure, nsamp by ncycle matrix
+%
+% output:
+%  - cyl_p	[pressure] : pegged cylinder pressure, nsamp by ncycle
+%
+% notes:
+%  - Current version contains no error checking. 
+%  - Assumed firing order is 1-3-4-2, with data collection triggered on 
+%    BDC compression of cylinder one.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [m, ncycle] = size(cyl_p);
 nsamp       = m/720;        % number of samples per cad

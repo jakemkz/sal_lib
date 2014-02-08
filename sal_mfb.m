@@ -1,12 +1,11 @@
 function [xb, ca10, ca50, ca90] = sal_mfb(cyl_p, cyl_v, ivc, evo, spk, mode)
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %     sal_mfb - calculate burn curve based on cylinder pressure data      %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_mfb -  version 0.91 - Jake McKenzie - mofified: 06/18/13
+% sal_mfb -  version 0.92 - Jake McKenzie - mofified: 06/18/13
 % 
 % inputs:
 %   - cylinder pressure [bar]: pegged, crank angle resolved

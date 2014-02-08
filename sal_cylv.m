@@ -1,17 +1,16 @@
 function [cyl_v, cyl_dv, vd] = sal_cylv(ca)
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %          sal_cylv - calculate cylinder volume based on geometry         %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_cylv -  version 0.91 - Jake McKenzie - mofified: 01/02/14
+% sal_cylv -  version 0.92 - Jacob E. McKenzie - mofified: 01/02/14
 % 
 % inputs:
 %   - ca                [cad]: crank angle aBDC compression, may be a vector
 %   - geom                   : struct created based on constants in sal_geom
-%   - geom.offset       [cad]: offset of ca = 0 from true BDC
+%   - geom.offset       [cad]: offset of ca = 0 from true BDC (encoder cal.)
 %   - geom.bore         [m]  : cylinder bore
 %   - geom.stroke       [m]  : stroke
 %   - geom.rod          [m]  : connecting rod length
@@ -19,16 +18,16 @@ function [cyl_v, cyl_dv, vd] = sal_cylv(ca)
 %
 % outputs:
 %   - cyl_v             [m^3]: cylinder volume, crank angle resolved
-%   - cyl_dv            [m^3]: change in cylinder volume
+%   - cyl_dv            [m^3]: change in cylinder volume wrt change in ca
 %   - vd                [m^3]: displacement volume
 %
 % notes:
-%   current version does not include wrist pin offset.
+%   current version does not include wrist pin offset, or any error checking
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% obtain geometrical constants using from sal_geom
-geom = sal_geom;
+% obtain geometrical constants using from sal_geom function
+geom = sal_geom();
 
 vd = pi*(geom.bore/2)^2*geom.stroke;    % displacement volume in m^3;
 vc = vd/(geom.rc-1);                    % clearance volume in m^3;

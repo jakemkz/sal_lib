@@ -1,20 +1,20 @@
 function [gimep, nimep] = sal_mep(cylp, dv, vd)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%									  %
+%									                                      %
 %  sal_mep - compute the gross and net indicated mean effective pressure  %
-%									  %
+%									                                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % sal_mep - version 1.0 - Jacob E. McKenzie - modified: 01/04/14
 %
 % inputs:
 %  - cylp	[pressure] : cylinder pressure as a function of crank angle
-%			     nsamp by ncycle matrix, where nsamp is the
-%			     number of samples per engine cycle and ncycle
-%			     is the number of cycles to be analyzed. 
+%			             nsamp by ncycle matrix, where nsamp is the
+%			             number of samples per engine cycle and ncycle
+%			             is the number of cycles to be analyzed. 
 %  - dv		[volume]   : cylinder volume as a function of crank angle
-%			     nsamp by ncycle matrix
-%  - vd         [volume]   : displacement volume (scalar value)
+%			             nsamp by ncycle matrix
+%  - vd     [volume]   : displacement volume (scalar value)
 %
 % outputs:
 %  - gimep 	[pressure] : the gross indicated mean effective pressure

@@ -1,5 +1,4 @@
 function geom = sal_geom()
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %          sal_geom - define engine-specific geometrical constants        %

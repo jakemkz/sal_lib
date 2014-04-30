@@ -1,21 +1,22 @@
-function [xb, ca10, ca50, ca90] = sal_mfb(cyl_p, cyl_v, ivc, evo, spk, mode)
+function [xb, ca10, ca50, ca90] = sal_mfb(cyl_p, cyl_v, spk, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %     sal_mfb - calculate burn curve based on cylinder pressure data      %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_mfb -  version 0.92 - Jake McKenzie - mofified: 06/18/13
+% sal_mfb -  version 0.93 - Jake McKenzie - mofified: 04/29/14
 % 
 % inputs:
 %   - cylinder pressure [bar]: pegged, crank angle resolved
 %   - cylinder volume   [m^3]: cylinder volume, crank angle resolved
+%   - spk               [cad]: angle at spark bTDCcomp
+%   - mode              [str]: fit/computation mode
 %   - ivc               [cad]: angle at intake valve closing aBDCcomp
 %   - evo               [cad]: angle at exhaust valve opens bBDCexch
-%   - spk               [cad]: angle at spark bTDCcomp
 %
 % outputs:
-%   - mfb               [1]  : cumulative fraction of fuel burned
+%   - xb                [1]  : cumulative fraction of fuel burned
 %   - ca10              [cad]: crank angle of 10% burn
 %   - ca50              [cad]: crank angle of 50% burn
 %   - ca90              [cad]: crank angle of 90% burn
@@ -26,9 +27,40 @@ function [xb, ca10, ca50, ca90] = sal_mfb(cyl_p, cyl_v, ivc, evo, spk, mode)
 %   and the end of combustion may be defined as say 20 deg before exhaust
 %   valve opening. Both cyl_p and cyl_v must contain one cycle (720 crank
 %   angles) at any encoder resolution. All angles are measured aBDC
-%   compression.
+%   compression. Only one mode is currently supported.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% parameter defaults (used if they are not defined in function call) %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ivc_default  = 40; % aBDC compression
+evo_default  = 20; % bBDC gas exchange
+mode_default = 'default';
+
+%%% extract optional arguments %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+narginchk(3,6);
+switch nargin
+    case 4
+        ivc  = ivc_default;
+        evo  = evo_default;
+        mode = varargin{1};
+    case 5
+        ivc  = varargin{2};
+        evo  = evo_default;
+        mode = varargin{1};
+    case 6
+        ivc  = varargin{2};
+        evo  = varargin{3};
+        mode = varargin{1};
+    otherwise
+        ivc  = ivc_default;
+        evo  = evo_default;
+        mode = mode_default;
+end
+
+%%% pre processing %%%
+%%%%%%%%%%%%%%%%%%%%%%
 
 nsamp = length(cyl_p)/720;          % number of samples per cad
 scfi  = round(nsamp*(ivc+10));      % start of compression fit index
@@ -39,7 +71,7 @@ cyl_p = smooth(cyl_p,nsamp*3);      % smooth pressure trace (to remove knock)
 %%% locate start of combustion %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%% mode 1 - search for start of combustion by fitting
+%%% mode 'default' - search for start of combustion by fitting
 ftln    = nsamp*(180-spk)-scfi;  % fit length (initial value)
 ftinc   = nsamp*2;               % fit increment
 inbound = 1;
@@ -92,6 +124,7 @@ soci = scfi+ftln-nsamp*5; % padding of 5CA
 
 %%% mode 2 - search for end of combustion at max of pV^1.15
 [~, eoci] = max(cyl_p.*cyl_v.^1.15);
+eoci = eoci+nsamp*20; %20 CAD padding
 game = polyfit(log10(cyl_v(eoci:eefi)),log10(cyl_p(eoci:eefi)),1);
 
 %%% debug plot
@@ -127,41 +160,42 @@ ca90 = (find((xb >= .90),1,'first')-1)/nsamp;
 
 
 %%% warning output if burn duration is larger than 55 CA
-if((eoci-soci)/nsamp >= 65)
-    disp(['Warning: Combustion duration of ', num2str((eoci-soci)/nsamp), 'crank angles detected, could be erroneous'])
-    figure(1003), hold on
+% if((eoci-soci)/nsamp >= 65)
+%     disp(['Warning: Combustion duration of ', num2str((eoci-soci)/nsamp), 'crank angles detected, could be erroneous'])
+%     figure(1003), hold on
+%     range = linspace((soci-1)/nsamp,(eoci-1)/nsamp,eoci-soci+1);
+%     [ax, h1, h2] = plotyy(range,cyl_p(soci:eoci),range,xb(soci:eoci));
+%     set(ax(2),'YLim',[0,1.25])
+%     plot([ca10,ca50,ca90],cyl_p([ca10,ca50,ca90]*nsamp+1),'or')
+%     hold off
+%     figure(1004),loglog(cyl_v,cyl_p,'-k',cyl_v([scfi,soci,eoci,eefi]),cyl_p([scfi,soci,eoci,eefi]),'or')
+% end
+
+
+
+
+%%% diagnostic mode %%%
+%%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(mode,'debug')    
+    figure(999)
+    loglog(cyl_v,cyl_p,'-k',cyl_v([scfi,soci,eoci,eefi]),cyl_p([scfi,soci,eoci,eefi]),'-or')
+    
+    % mfb plot
+    figure(1000)
     range = linspace((soci-1)/nsamp,(eoci-1)/nsamp,eoci-soci+1);
     [ax, h1, h2] = plotyy(range,cyl_p(soci:eoci),range,xb(soci:eoci));
+    hold on
     set(ax(2),'YLim',[0,1.25])
     plot([ca10,ca50,ca90],cyl_p([ca10,ca50,ca90]*nsamp+1),'or')
     hold off
-    figure(1004),loglog(cyl_v,cyl_p,'-k',cyl_v([scfi,soci,eoci,eefi]),cyl_p([scfi,soci,eoci,eefi]),'or')
+    
+    figure(1001)
+    hold on
+    plot(now-fix(now),(eoci-soci)/nsamp,'ok')
+    ylabel('Burn Duration, [CAD]')
+    hold off
+    
+    pause
 end
-
-
-
-
-%%% diagnostics
-
-%fit check
-% figure(999)
-% loglog(cyl_v,cyl_p,'-k',cyl_v([scfi,soci,eoci,eefi]),cyl_p([scfi,soci,eoci,eefi]),'or')
-
-% mfb plot
-% figure(1000)
-% range = linspace((soci-1)/nsamp,(eoci-1)/nsamp,eoci-soci+1);
-% [ax, h1, h2] = plotyy(range,cyl_p(soci:eoci),range,xb(soci:eoci));
-% hold on
-% set(ax(2),'YLim',[0,1.25])
-% plot([ca10,ca50,ca90],cyl_p([ca10,ca50,ca90]*nsamp+1),'or')
-% hold off
-% 
-% figure(1001)
-% hold on
-% plot(now-fix(now),(eoci-soci)/nsamp,'ok')
-% ylabel('Burn Duration, [CAD]')
-% hold off
-% 
-% pause
 
 end

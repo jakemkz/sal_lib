@@ -1,19 +1,20 @@
-function m_fuel = sal_fuelinj(varargin)
+function [m_fuel, varargout] = sal_fuelinj(p_fuel, pw_fuel, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %  sal_fuelinj - compute the mass of fuel injected in one injection event %
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_fuelinj -  version 0.9 - Jacob E. McKenzie - mofified: 01/07/14
+% sal_fuelinj -  version 0.91 - Jacob E. McKenzie - mofified: 04/29/14
 % 
 % inputs:
-%  - p_fuel	[Mpa] : fuel rail pressure
-%  - pw_fuel	[ms]  : fuel injector signal pulsewidth
-%  - fuel	[str] : fuel name, string input
+%  - p_fuel	 [Mpa] : fuel rail pressure
+%  - pw_fuel [ms]  : fuel injector signal pulsewidth
+%  - fuel	 [str] : fuel name, string input
 %
 % output:
-%  - m_fuel	[g]   : mass of fuel injected in one injection event
+%  - m_fuel	  [g]    : mass of fuel injected in one injection event
+%  - LHV_fuel [J/kg] : lower heating value of fuel
 %
 % notes:
 %  current version does not include any error checking. p_fuel and pw_fuel
@@ -22,12 +23,11 @@ function m_fuel = sal_fuelinj(varargin)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% define arguments for better readability
-p_fuel  = varargin{1};
-pw_fuel = varargin{2};
-
-if length(varargin) > 2
-  fuel = varargin{3};
+% parse optional arguments
+narginchk(2,3);
+nargoutchk(1,2);
+if (nargin == 3)
+  fuel = varargin{1};
 end
 
 
@@ -36,11 +36,13 @@ switch upper(fuel)
     % Haltermann HF0437 96 RON ref. fuel
     AFR = 14.6742;
     rho = 0.7374;
+    LHV = 44.0e6;
   
   otherwise
     % case for unidentifiable fuel type (assume gasoline)
     AFR = 14.7;
     rho = 0.744;
+    LHV = 44.0e6;
 end
 
 % calibration  map of fuel injector. At the pressures given by p_ref the
@@ -57,5 +59,10 @@ slope  = interp1(p_ref,v_ref,p_fuel);
 offset = interp1(p_ref,t_ref,p_fuel);
 
 m_fuel = ((pw_fuel-offset).*slope*(rho/rho_ref))*10^(-6); % fuel in kg
+
+% if LHV is requested, return it.
+if (nargout == 2)
+    varargout{1} = LHV;
+end
 
 end

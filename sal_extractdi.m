@@ -5,11 +5,11 @@ function [di_chan] = sal_extractdi(di_group,chan)
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_extractdi -  version 0.90 - Jacob E. McKenzie - mofified: 04/30/14
+% sal_extractdi -  version 0.91 - Jacob E. McKenzie - mofified: 05/22/14
 % 
 % inputs:
 %   - di_group [int] : a gruop of digital channels stored in one byte
-%   - chan     [int] : the desired output channel (valid range 1 to 4)
+%   - chan     [int] : the desired output channel (valid range 0 to ...)
 %
 % outputs:
 %   - di_chan  [bool] : the value of the output channel
@@ -18,7 +18,6 @@ function [di_chan] = sal_extractdi(di_group,chan)
 %   - current version does not perform error checking
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bytes   = dec2bin(di_group,4);
-di_chan = bytes(:,chan)-'0';
+di_chan = bitand(di_group,2^chan)./2^chan;
 
 end

@@ -5,7 +5,7 @@ function [xb, ca10, ca50, ca90] = sal_mfb(cyl_p, cyl_v, spk, varargin)
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_mfb -  version 0.93 - Jake McKenzie - mofified: 04/29/14
+% sal_mfb -  version 0.94 - Jake McKenzie - mofified: 05/22/14
 % 
 % inputs:
 %   - cylinder pressure [bar]: pegged, crank angle resolved
@@ -154,10 +154,14 @@ xbp    = (cyl_p(soci:eoci).^(1./gamma).*cyl_v(soci:eoci)-cyl_p(soci).^(1./gamma)
 xb(soci:soci+i-1)  = xbp(1:i)/xbp(i);
 xb(soci+i:end)     = 1;
 
-ca10 = (find((xb >= .10),1,'first')-1)/nsamp;
-ca50 = (find((xb >= .50),1,'first')-1)/nsamp;
-ca90 = (find((xb >= .90),1,'first')-1)/nsamp;
+%%% find ca10, ca50 and ca90 using linear interpolation
+ca10 = find((xb >= .10),1,'first');
+ca50 = find((xb >= .50),1,'first');
+ca90 = find((xb >= .90),1,'first');
 
+ca10 = interp1(xb(ca10-1:ca10),[ca10-1, ca10],0.1)/nsamp;
+ca50 = interp1(xb(ca50-1:ca50),[ca50-1, ca50],0.5)/nsamp;
+ca90 = interp1(xb(ca90-1:ca90),[ca90-1, ca90],0.9)/nsamp;
 
 %%% warning output if burn duration is larger than 55 CA
 % if((eoci-soci)/nsamp >= 65)

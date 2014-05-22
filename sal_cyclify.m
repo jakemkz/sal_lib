@@ -5,7 +5,7 @@ function [cyl_po] = sal_cyclify(cyl_p,bdc,varargin)
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_cyclify -  version 0.91 - Jake McKenzie - mofified: 04/29/14
+% sal_cyclify -  version 0.92 - Jake McKenzie - mofified: 05/22/14
 % 
 % inputs:
 %  - cyl_p	[pressure] : cylinder pressure, time resolved
@@ -27,6 +27,8 @@ function [cyl_po] = sal_cyclify(cyl_p,bdc,varargin)
 %  - Code contains a basic check to determine if BDC signal is 180 deg out
 %    of phase. 
 %  - Resampled data assumes that the speed is constant within one cycle.
+%  - If no edges are found on BDC signal cyl_p is placed into cell
+%    array as-is.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -58,29 +60,37 @@ if (maxi < length(cyl_p(:,1))*0.9/4)
 end
 
 % convert variables to column vectors
-cyl_p = cyl_p(:);
 bdc   = bdc(:) >= 1;                     % convert bdc to boolean
 trig  = xor(bdc,circshift(bdc,1)) & bdc; % generate trig pulse on each bdc rising edge
 ind   = find(trig);
 
-% initialize output cell vectors
-cyl_po{length(ind)-1} = [];
-
-% move cycle data into cell vectors
-for i = 1:(length(ind)-1)
-    cyl_po{i} = cyl_p(ind(i):ind(i+1));
-end
-
-% computations for resampling. speed is assumed constant within cycle
-if(strcmp(mode,'resample'))
-    ca    = 0:dCA:(720-dCA);
-    cyl_o = zeros(length(ca),length(cyl_po));
-    for i = 1:length(cyl_po)
-        theta = linspace(0,720,length(cyl_po{i}));
-        cyl_o(:,i) = interp1(theta,cyl_po{i},ca);
+% if edges are detected on bdc signal use them, otherwise move data to cell
+if ~isempty(ind)
+    cyl_p = cyl_p(:);
+    
+    % initialize output cell vectors
+    cyl_po{length(ind)-1} = [];
+    
+    % move cycle data into cell vectors
+    for i = 1:(length(ind)-1)
+        cyl_po{i} = cyl_p(ind(i):ind(i+1));
     end
-    cyl_po = cyl_o;
+    
+    % computations for resampling. speed is assumed constant within cycle
+    if(strcmp(mode,'resample'))
+        ca    = 0:dCA:(720-dCA);
+        cyl_o = zeros(length(ca),length(cyl_po));
+        for i = 1:length(cyl_po)
+            theta = linspace(0,720,length(cyl_po{i}));
+            cyl_o(:,i) = interp1(theta,cyl_po{i},ca);
+        end
+        cyl_po = cyl_o;
+    end
+else
+    cyl_po{length(cyl_p(1,:))} = [];
+    for i = 1:length(cyl_p(1,:))
+        cyl_po{i} = cyl_p(:,i);
+    end
 end
-
 
 end

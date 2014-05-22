@@ -5,7 +5,7 @@ function [Xf] = sal_hpf(X)
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% sal_hpf -  version 0.91 - Jake McKenzie - mofified: 04/29/14
+% sal_hpf -  version 0.92 - Jake McKenzie - mofified: 05/05/14
 %
 % inputs:
 %  - X  : time resolved data series
@@ -14,31 +14,32 @@ function [Xf] = sal_hpf(X)
 %  - Xf : time resolved data that has been high-pass filtered
 %
 % notes:
-%  -
+%  - sampling frequency and cutoff frequency are hardcoded
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Fs = 100000;  % sampling freq (Hz)
-Fc = 10000;   % cutoff freq (Hz)
+%%% configuration parameters
+Fs = 100000;   % sampling freq (Hz)
+Fc = 10000;     % cutoff freq (Hz)
 
+%%% frequency range
 L  = length(X);
-NFFT = 2^nextpow2(L);
+dF = Fs/L;
+f  = (-Fs/2:dF:Fs/2-dF)';
 
-Y  = fft(X,NFFT)/L;
-f  = Fs/2*linspace(0,1,NFFT/2+1);
+% filter
+flt = (Fc < abs(f));
 
-a  = find(f>Fc & f<(Fs/2));
+%%% compute fft and ifft
+X     = X-mean(X);
+spect = fftshift(fft(X))/L;
+spect = flt.*spect;
+X     = ifft(ifftshift(spect));
+Xf    = sign(real(X)).*abs(X)*L;
 
-Yf    = zeros(size(Y));
-Yf(a) = Y(a)*L;
-
-Xf = ifft(Yf);
-Xf = real(Xf(1:length(X)));
-
-%%% 
+%%% debug
 %
-% diagnostics
+% figure, plot(Xf)
+% figure, plot(spect)
 %
 %%%
-
-% figure, plot(real(Xf))
 end
